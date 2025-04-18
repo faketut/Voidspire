@@ -1,0 +1,411 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{geometry} % Required for adjusting margins
+
+\title{CC3k+ Project Design}
+\author{Jian Feng}
+\date{\today}
+
+% Adjust margins to be as small as possible
+\geometry{
+    a4paper,          % Use A4 paper size
+    left=10mm,        % Left margin
+    right=10mm,       % Right margin
+    top=10mm,         % Top margin
+    bottom=15mm       % Bottom margin
+}
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+This document outlines the plan of attack for the CS246 Winter 2025 project, ChamberCrawler3000+ (CC3k+). The plan includes a breakdown of tasks with deadlines, and answers to the choice of implementation.
+
+The game features a modular design that allows for optional DLC content to be toggled through command line flags, providing flexibility in gameplay experience. The main executable supports the following flags:
+
+\begin{itemize}
+    \item \textbf{-enableWeather}: Activates the Dynamic Weather System DLC
+    \begin{itemize}
+        \item Adds weather effects that modify visibility and movement
+        \item Integrates with existing effect system
+        \item Can be toggled without code recompilation
+    \end{itemize}
+    
+    \item \textbf{-enableQuest}: Activates the Quest System DLC
+    \begin{itemize}
+        \item Adds optional side quests with rewards
+        \item Includes kill and collection objectives
+        \item Leverages existing NPC and item systems
+    \end{itemize}
+    
+    \item \textbf{-file <filename>}: Specifies custom level file
+    \begin{itemize}
+        \item Allows loading of custom board layouts
+        \item Supports both default and custom level formats
+    \end{itemize}
+    
+    \item \textbf{-seed <number>}: Sets random seed
+    \begin{itemize}
+        \item Enables reproducible game states
+        \item Useful for testing and debugging
+    \end{itemize}
+\end{itemize}
+
+The base game experience remains unchanged when DLC features are disabled, ensuring backward compatibility and maintaining the core gameplay mechanics. The DLC features are designed to enhance the game without compromising the original experience, providing players with the flexibility to customize their gameplay.
+
+\section{Overview}
+The implementation tackles several key challenges:
+
+\begin{enumerate}
+    \item \textbf{Spawn Rate Management}
+    \begin{itemize}
+        \item Board uses constants for entity counts: POTION\_CNT $= 10$, GOLD\_CNT $= 10$, ENEMY\_CNT $= 20$.
+        \item Random tile selection from available floor tiles using \texttt{getRandomTile()}.
+        \item Special handling for Dragon Hoards:
+            \begin{enumerate}
+                \item Dragons are placed adjacent to their hoards.
+                \item Protected item mechanism links Dragon to its hoard.
+                \item Position tracking ensures spatial relationship.
+            \end{enumerate}
+    \end{itemize}
+
+    \item \textbf{Unique Item Management}
+    \begin{itemize}
+        \item Compass:
+        \begin{itemize}
+            \item Generated once per floor during enemy generation
+            \item Assigned to a non-Dragon, non-Merchant enemy
+            \item Board tracks compass state with compassPickedUp flag
+        \end{itemize}
+        \item Barrier Suit:
+        \begin{itemize}
+            \item Singleton pattern ensures single instance
+            \item Board tracks suit state with setSuit flag
+            \item Protection mechanism shared with Dragon Hoards
+        \end{itemize}
+    \end{itemize}
+
+    \item \textbf{Enemy Special Abilities}
+    \begin{itemize}
+        \item Virtual useSpecialAbility() method in Enemy base class
+        \item Specialized implementations:
+        \begin{itemize}
+            \item Vampire: Steals 10 HP from player
+            \item Goblin: Steals 5 gold from player
+            \item Troll: Regenerates 5 HP
+            \item Phoenix: Resurrects once with half HP
+            \item Merchant: Drops merchant hoard when killed
+            \item Dragon: Protects its hoard
+        \end{itemize}
+    \end{itemize}
+
+    \item \textbf{Enemy State Management}
+    \begin{itemize}
+        \item Board maintains vector of enemyTiles for efficient updates
+        \item Enemy attributes (HP, ATK, DEF) initialized based on type
+        \item State tracking:
+        \begin{itemize}
+            \item Health management with bounds checking
+            \item Death handling with item drops
+            \item Protected item relationships
+            \item Merchant hostility tracking
+        \end{itemize}
+    \end{itemize}
+
+    \item \textbf{PC-Enemy Interaction}
+    \begin{itemize}
+        \item Combat system:
+        \begin{itemize}
+            \item Damage calculation considering ATK and DEF
+            \item Special ability triggers during combat
+            \item Death handling with item drops
+        \end{itemize}
+        \item Movement system:
+        \begin{itemize}
+            \item Valid move checking
+            \item Enemy tracking and updates
+            \item Collision detection
+        \end{itemize}
+    \end{itemize}
+\end{enumerate}
+
+
+\section{Design}
+The system implements several key design patterns and architectural decisions, with a strong focus on high cohesion and low coupling:
+
+\subsection{High Cohesion Analysis}
+\begin{itemize}
+    \item \textbf{Functional Cohesion}
+    \begin{itemize}
+        \item Enemy class hierarchy:
+        \begin{itemize}
+            \item Base Enemy class encapsulates common enemy attributes (hp, atk, def)
+            \item Each enemy subclass (Vampire, Goblin, etc.) focuses solely on its unique special ability
+            \item Clear separation of combat stats and special behaviors
+        \end{itemize}
+        \item Board class responsibilities:
+        \begin{itemize}
+            \item Manages tile grid and entity placement
+            \item Handles movement validation and execution
+            \item Coordinates entity interactions and combat
+            \item Maintains game state (compass, merchant hostility)
+        \end{itemize}
+        \item ItemGenerator class:
+        \begin{itemize}
+            \item Centralizes all item creation logic
+            \item Type-specific generation methods
+            \item Clear factory method patterns for each item category
+        \end{itemize}
+    \end{itemize}
+
+    \item \textbf{Sequential Cohesion}
+    \begin{itemize}
+        \item Board initialization sequence:
+        \begin{itemize}
+            \item loadFromFile() loads basic layout
+            \item createEntity() populates entities
+            \item handleItemProtection() sets up protection relationships
+        \end{itemize}
+        \item Combat sequence:
+        \begin{itemize}
+            \item calculateDamage() determines damage
+            \item attackEnemy()/attackPc() applies damage
+            \item useSpecialAbility() triggers effects
+            \item die() handles death consequences
+        \end{itemize}
+    \end{itemize}
+\end{itemize}
+
+\subsection{Low Coupling Analysis}
+\begin{itemize}
+    \item \textbf{Interface-Level Coupling}
+    \begin{itemize}
+        \item Entity base class:
+        \begin{itemize}
+            \item Provides common interface for all game entities
+            \item Allows polymorphic handling in Tile class
+            \item Reduces direct dependencies between types
+        \end{itemize}
+        \item Effect system:
+        \begin{itemize}
+            \item Abstract Effect class defines clear interface
+            \item EffectManager interacts only with interface
+            \item Concrete effects remain independent
+        \end{itemize}
+    \end{itemize}
+
+    \item \textbf{Data Structure Coupling}
+    \begin{itemize}
+        \item Tile class:
+        \begin{itemize}
+            \item Uses weak\_ptr to Board to prevent circular references
+            \item Encapsulates entity and position data
+            \item Provides clean interface for Board operations
+        \end{itemize}
+        \item Type system:
+        \begin{itemize}
+            \item Centralized Type enum reduces direct dependencies
+            \item TypeCategories provides grouped functionality
+            \item Consistent type checking across system
+        \end{itemize}
+    \end{itemize}
+
+    \item \textbf{Communication Coupling}
+    \begin{itemize}
+        \item Factory patterns:
+        \begin{itemize}
+            \item EnemyGenerator and ItemGenerator isolate creation logic
+            \item Board only knows about abstract types
+            \item Clean separation of concerns
+        \end{itemize}
+        \item Protected item mechanism:
+        \begin{itemize}
+            \item Items maintain their own protection state
+            \item Enemies track protected items independently
+            \item Board coordinates without direct coupling
+        \end{itemize}
+    \end{itemize}
+\end{itemize}
+
+\subsection{Design Patterns Implementation}
+\begin{itemize}
+    \item \textbf{Factory Pattern}
+    \begin{itemize}
+        \item ItemGenerator:
+        \begin{itemize}
+            \item generatePotion(), generateGold() methods
+            \item Type-based creation logic
+            \item Centralized item instantiation
+        \end{itemize}
+        \item EnemyGenerator:
+        \begin{itemize}
+            \item generateEnemy() with type or random generation
+            \item Consistent enemy creation interface
+            \item Encapsulated initialization logic
+        \end{itemize}
+    \end{itemize}
+
+    \item \textbf{Singleton Pattern}
+    \begin{itemize}
+        \item EffectManager:
+        \begin{itemize}
+            \item Thread-safe initialization
+            \item Global access point
+            \item Centralized effect management
+        \end{itemize}
+    \end{itemize}
+
+    \item \textbf{Observer Pattern (Implicit)}
+    \begin{itemize}
+        \item Board-Tile relationship:
+        \begin{itemize}
+            \item Tiles observe Board state
+            \item Board updates trigger Tile updates
+            \item Weak references prevent memory leaks
+        \end{itemize}
+    \end{itemize}
+\end{itemize}
+
+\section{Resilience to Change}
+The system is designed to be highly adaptable:
+
+\begin{itemize}
+    \item \textbf{Effect System Extensibility}
+    \begin{itemize}
+        \item New effects can be added by creating new Effect subclasses
+        \item EffectManager handles all effect lifecycle management
+        \item Clear separation between temporary and permanent effects
+    \end{itemize}
+
+    \item \textbf{Enemy System Flexibility}
+    \begin{itemize}
+        \item New enemy types can be added through inheritance
+        \item Special abilities are encapsulated in subclasses
+        \item Protected item system allows for new protection mechanics
+    \end{itemize}
+
+    \item \textbf{Item System Modularity}
+    \begin{itemize}
+        \item New item types can be added through inheritance
+        \item ItemGenerator factory methods support easy extension
+        \item Protection mechanism is reusable across item types
+    \end{itemize}
+
+    \item \textbf{Type System Organization}
+    \begin{itemize}
+        \item Centralized Type enum for all game entities
+        \item TypeCategories class for grouping and checking types
+        \item Easy addition of new types and categories
+    \end{itemize}
+\end{itemize}
+
+\section{Answers to Questions}
+\begin{enumerate}
+    \item 
+    Answer: How could you design your system so that each race could be easily generated? Additionally, how difficult does such a solution make adding additional classes?
+        \begin{itemize}
+            \item PlayerCharacter class is the core class of the player character, which contains basic attributes (such as health \texttt{hp}, attack power \texttt{atk}, defense power \texttt{def}, and gold coin multiplier \texttt{goldModifier}), as well as behavior logic.
+            \item \textbf setAttributes(Race r) method dynamically sets the character's initial attributes according to the selected race by a \texttt{switch-case} structure.
+            \item When adding a new race, just add a new type to the \texttt{Race} enumeration and add the corresponding attribute modification logic in the \texttt{setAttributes} method.
+            \item This design complies with the open-closed principle (open for extension, closed for modification).
+            \item Each time you change race, it will reset to default before applying race-specific modifications, ensuring that attributes do not accumulate errors due to multiple switching.
+        \end{itemize}
+    \item Answer: How does your system handle generating different enemies? Is it different from how you generate the player character? Why or why not?
+        \begin{itemize}
+            \item EnemyGenerator class is responsible for dynamically creating enemy instances based on the needs of the game. It uses a factory method or abstract factory pattern internally to determine the specific enemy subclass to instantiate based on the parameters or random numbers passed in.
+            \item While both enemies and player characters are game characters, there are some key differences in how they are generated:
+            \begin{itemize}
+                \item Enemies usually need to support a large number of variants to increase the richness and challenge of the game, while player characters focus more on personalized customization options.
+                \item Enemies are dynamically generated according to preset templates, especially when generating random events or levels. In contrast, player characters are usually carefully configured before the game starts.
+                \item Enemy instances have a short lifecycle and will be destroyed when the battle ends; while player characters are core objects throughout the entire game process, and their status requires long-term maintenance.
+                \item Since there be a large number of enemies in the game, their generation process must be efficient and easy to batch process. For player characters, although they also need to be optimized, due to their limited number, the performance requirements are relatively low.
+            \end{itemize}
+        \end{itemize}
+    \item Answer: How could you implement special abilities for different enemies. For example, gold stealing for goblins, health regeneration for trolls, health stealing for vampires, etc.?
+    \begin{itemize}
+        \item By creating a base Enemy class, and having each enemy with a special ability (such as goblins, trolls, vampires, etc.) inherit from this base class, and then specifically implement each special ability in the subclass. Define a virtual method (such as useSpecialAbility) in the Enemy base class, which will be implemented by the specific subclass to provide specific behavior. For example, a vampire can steal health from the player and increase his own health; a goblin can steal the player's gold; and a troll can restore its own health. This design makes it very simple to add new enemy types to the system. Just create a new subclass and implement the useSpecialAbility method.
+    \end{itemize}
+    \item Answer: What design pattern could you use to model the effects of temporary potions (Wound/Boost Atk/Def) so that you do not need to explicitly track which potions the player character has consumed on any particular floor?
+    \begin{itemize}
+        \item The Effect class defines an interface that all concrete effect classes (such as BoostAtkEffect) must implement. It includes methods for applying effects, removing effects, and checking whether it is a temporary effect. The EffectManager singleton class is responsible for managing and tracking all effects currently applied to the player character. The clearTemporaryEffects method of the EffectManager is called every time the player enters a new floor to clear all temporary effects. In this way, we avoid directly tracking the specific potions consumed by the player, and instead dynamically apply and remove effects through the decorator pattern.
+    \end{itemize}
+    \item Answer: How could you generate items so that the generation of Treasure, Potions, and major items reuses as much code as possible? That is for example, how would you structure your system so that the generation of a potion and then generation of treasure does not duplicate code? How could you reuse the code used to protect both dragon hoards and the Barrier Suit?
+    \begin{itemize}
+        \item To ensure that the code for generating gold, potions, and main items is reused as much as possible while avoiding duplication, we use several strategies in object-oriented design: inheritance, interfaces, and factory patterns. Define an Item base class or interface, and all spawnable items (such as gold, potions, treasures, etc.) derive from or implement this base class. This allows us to use a unified way to handle the generation logic of different types of items. Create a specific class for each specific item type, such as Gold, Potion, Treasure, etc. Each class is responsible for its own characteristics and behavior, but all follow the same interface or inherit from the same base class. Use factory methods or abstract factories to generate item instances. The advantage of this is that the item generation logic can be centrally controlled, and it is easy to add new item types without affecting existing code. Whether it is a dragon's treasure or a barrier set, a common protection mechanism is implemented by adding a protection status property to the Item base class. Different items can set this status as needed.
+    \end{itemize}
+\end{enumerate}
+
+
+
+\section{Extra Credit Features}
+We propose the following DLC features that can be toggled without code recompilation:
+
+\begin{itemize}
+    \item \textbf{Dynamic Weather System DLC}
+    \begin{itemize}
+        \item \textbf{Feature Description:} Weather effects that modify gameplay mechanics
+        \item \textbf{Implementation Approach:}
+        \begin{itemize}
+            \item Created WeatherEffect class implementing Effect interface
+            \item Added weather types (rain, storm, fog) affecting visibility and movement
+            \item Integrated with existing EffectManager
+            \item Implemented weather generation through generateWeather() function
+            \item Added weather effects management in EffectManager with addWeatherEffect() and clearWealtherEffects()
+        \end{itemize}
+        \item \textbf{Design Integration:}
+        \begin{itemize}
+            \item Uses existing effect system architecture
+            \item Extends TypeCategories for weather types
+            \item Maintains current game balance when disabled
+            \item Activated through -enableWeather command line parameter
+        \end{itemize}
+    \end{itemize}
+
+    \item \textbf{Quest System DLC}
+    \begin{itemize}
+        \item \textbf{Feature Description:} Optional side quests with rewards
+        \item \textbf{Implementation Approach:}
+        \begin{itemize}
+            \item Created Quest class hierarchy with KillQuest and CollectQuest
+            \item Implemented QuestManager singleton for managing active quests
+            \item Added quest tracking in PlayerCharacter (killCounts, itemCounts)
+            \item Integrated quest updates into game loop
+            \item Implemented quest generation in Game::initializeQuests()
+        \end{itemize}
+        \item \textbf{Design Integration:}
+        \begin{itemize}
+            \item Uses existing item generation system for rewards
+            \item Leverages current NPC interaction framework
+            \item Optional content that doesn't affect main gameplay
+            \item Activated through -enableQuest command line parameter
+        \end{itemize}
+    \end{itemize}
+\end{itemize}
+
+These DLC features are designed to:
+\begin{itemize}
+    \item Add significant gameplay depth without modifying core mechanics
+    \item Showcase object-oriented design principles (inheritance, polymorphism)
+    \item Maintain clean separation between base game and optional features
+    \item Leverage existing architectural patterns
+    \item Be easily toggled through command line parameters
+    \item Provide meaningful rewards and challenges
+    \item Integrate seamlessly with existing systems
+\end{itemize}
+
+\section{Final Questions}
+\begin{enumerate}
+    \item  Answer: What lessons did this project teach you about developing software in teams? If you worked alone, what lessons did you learn about writing large programs?
+    \begin{itemize}
+        \item This project reinforced the value of agile development—rapid prototyping, frequent iteration, and a flexible response to change are essential. It also highlighted the importance of collaboration; rather than struggling in isolation, reaching out for help and working together can greatly enhance the development process.
+    \end{itemize}
+    \item Answer: What would you have done differently if you had the chance to start over?
+    \begin{itemize}
+        \item If given another chance, I would start by leveraging proven examples and best practices from established projects instead of building everything from scratch. Often, the widely adopted standard approach yields better results than trying to innovate solely based on one's own ideas.
+    \end{itemize}
+\end{enumerate}
+
+
+\end{document}

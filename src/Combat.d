@@ -1,0 +1,1 @@
+Combat.o: Combat.cc
