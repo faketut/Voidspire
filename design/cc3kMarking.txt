@@ -1,0 +1,162 @@
+EACH DEMO WILL RUN FOR NO MORE THAN 30 MINUTES. TO GET A CHANCE TO SHOW CASE ALL FEATURES YOU MUST BE ABLE TO LOAD FILES THROUGH A COMMAND LINE ARGUMENT AS SPECIFIED IN THE ASSIGNMENT. FAILURE TO DO SO WILL RESULT IN DELAYS IN MARKING YOUR SUBMISSION DURING THE DEMO. NO EXTRA TIME WILL BE GIVEN.
+__________________________________________________________________________________
+
+Total: __________/62
+
+Bonus: __________/10
+
+General: __/10
+
+___ Program includes a Makefile
+
+___ Program compiles and runs
+
+___ Program displays initial board
+
+___ Board displays current floor
+
+___ Board displays current money
+
+___ Current level and score are updated correctly
+
+___ Player is asked to choose a race
+
+___ Each race can be selected (randomly check 2-3)
+
+___ Each race has appropriate starting statistics (for the ones selected above)
+
+___ PC and stairs never spawn in same room
+
+
+Movement: __/7
+
+___ Can move in all directions
+
+___ Can move diagonally around corners
+
+___ Cannot move outside the bounds of a chamber
+
+___ Enemies move whenever a valid command is issued
+
+___ Cannot move outside the bounds of a passage
+
+___ Enemies, the PC, Gold, and Potions can never occupy the same floor tile.
+    The only exception is the PC can walk over a tile with a dragon hoard as
+    long as the associated dragon is alive, but PC still cannot pick up the gold
+    until the dragon is dead.  
+
+___ Stairs move PC to new floor (either newly generated or from the provided file)
+
+
+Random Generation: __/9
+(Program is run with no argument supplied for the load file)
+(A lot of this will require actually scanning through the relevant code)
+
+___ All enemies can be generated
+
+___ 10 potions are generated per floor
+
+___ Potion generation follows prescribed distribution (may need to check code)
+
+___ 10 treasure piles are generated per floor
+
+___ Gold generation follows prescribed distribution (may need to check code)
+
+___ 20 enemies (does not count Dragons) are generated per floor
+
+___ Enemy generation follows prescribed distribution (may need to check code)
+
+___ Order of generation occurs as set out in design specification (may need to check code)
+
+___ Enemies, Gold, and Potions only spawn on floor tiles
+
+
+Command Line Argument: __/3
+
+__ Program can load a file specified as a command line argument.(FILE: cc3kfloor.txt)
+
+
+
+Potions: __/9
+
+___ Can use Potion in any of the cardinal directions (FILE: potions.txt)
+
+___/3 Each potion has the correct effect on the PC (0.5/potion)(FILE: potions.txt)
+
+___ Achieving an HP of 0 causes player to lose game via potions(FILE: death.txt)
+
+___ Atk/Def cannot drop below 0 (FILE: lowattack.txt and FILE: lowdefence.txt)
+
+___ Potions are unknown until they are used once
+
+___ Potion effects (for Atk and Def) disappear when transitioning levels
+
+___ Elves get positive benefits from negative potions
+
+
+Combat: __/12
+
+___ PC can attack in any direction
+
+___ PC can be attacked by more than one enemy at once.
+
+___ Achieving an HP of 0 causes player to lose game via combat (FILE: attack_all.txt)
+
+___ Merchants should not attack the PC initially (FILE: merchant.txt)
+
+___/2 After slaying a MERCHANT all other merchants should become hostile
+(both in this level (1pt) and further levels (1pt)) (FILE: merchant.txt)
+
+___ Enemies, except MERCHANT and DRAGON, are hostile to the PC and attack whenever possible
+
+___ DRAGON is hostile when PC is next to DRAGON Horde (FILE: dragon.txt)
+
+___ Damage is correctly calculated to the PC (May need to check code)
+
+___ Damage is correctly calculated to Enemies (may need to check code to double check enemies)
+
+___ Ensure that Enemies have a 50% chance not to hit PC (may need to check source)
+
+___ PC never misses a valid attack. (may need to check source - but should be
+     able to determine while playing) 
+	Note: Valid means an enemy is there
+
+
+Gold: __/5
+
+___ Gold is picked up when the PC walks on it (except DRAGON Horde if the DRAGON is alive)
+	Can be picked up in any direction (FILE: gold.txt)
+
+___/2 DRAGON Horde cannot be picked up until DRAGON is slain (1 before, 1 after)
+
+___ Slaying a MERCHANT drops a MERCHANT Horde (check score after slaying a merchant)
+    (Dropped merchant horde can be automatically added or require the player to walk
+     over it, both are valid)
+
+___ Dwarves get double gold/orcs get half gold/humans get 50% bonus at the end
+of the game.  (Check one or two of these cases randomly)
+
+
+Ending the Game: __/7
+
+___ Quit works
+
+___ Restart works (should prompt for a new race)
+
+___ If the player restarts, or the PC dies, or reaches the end of floor 5
+    then the game should prompt the player to quit or select a race
+    Note: Prompting for a new race by itself is fine
+    
+___ Program leaks only a modest amount of memory in text mode (apart from libraries)
+
+___ Program leaks no memory in text mode (apart from libraries)
+
+__/2 No segfaults/crashes/errors throughout entire demo (except for accidental invalid input)
+
+-1 mark for each segfault/crash/error (except for accidental invalid input) up to a maximum of -5
+
+
+Bonus: (Note to marker: Use the printed page containing the bonus.txt document that the group submitted. If the bonus.txt file was not submitted, but the group claims to have implemented the bonus, try your best to describe the bonus feature below
+(please be descriptive and indicate level of difficulty. 
+Difficulty numbers should be filled once the group has left to avoid arguments. 
+1 - easy and 10 - very difficult):
