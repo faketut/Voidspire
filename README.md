@@ -33,7 +33,7 @@ make
 
 ### Running the Game
 ```bash
-./soloabyss -enableWeather -enableQuest -file <floorfilename>
+./cc3k -enableWeather -enableQuest -file <floorfilename>
 ```
 
 ### Command-Line Options
