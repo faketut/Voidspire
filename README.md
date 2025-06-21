@@ -1,7 +1,7 @@
 
-# SoloAbyss
+# Voidspire
 
-**SoloAbyss** is a terminal-based, single-player dungeon crawler implemented in C++. The game features an endless tower structure with procedurally generated floors, turn-based combat, and support for modular gameplay extensions such as a dynamic weather system and a quest engine. It was developed to demonstrate object-oriented design principles, memory-safe architecture, and feature extensibility.
+**Voidspire** is a terminal-based, single-player dungeon crawler implemented in C++. The game features an endless tower structure with procedurally generated floors, turn-based combat, and support for modular gameplay extensions such as a dynamic weather system and a quest engine. It was developed to demonstrate object-oriented design principles, memory-safe architecture, and feature extensibility.
 
 ---
 
@@ -26,8 +26,8 @@
 
 ### Compilation
 ```bash
-git clone https://github.com/yourusername/SoloAbyss.git
-cd SoloAbyss
+git clone https://github.com/yourusername/Voidspire.git
+cd Voidspire
 make
 ```
 
